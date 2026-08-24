@@ -1,0 +1,81 @@
+{
+  "inventario": [
+    {
+      "producto": "Teclado Mechanical",
+      "stock": 60
+    },
+    {
+      "producto": "Monitor 144Hz",
+      "stock": 11
+    },
+    {
+      "producto": "Mouse Logitech 2",
+      "stock": 49
+    }
+  ],
+  "solicitudes": [
+    {
+      "id": 1,
+      "producto": "Teclado Mechanical",
+      "cantidad": 5,
+      "estado": "Aceptado",
+      "motivo": "Aprobado por el encargado. Stock descontado."
+    },
+    {
+      "id": 2,
+      "producto": "Teclado Mechanical",
+      "cantidad": 50,
+      "estado": "Rechazado",
+      "motivo": "Rechazado manualmente por el encargado."
+    },
+    {
+      "id": 3,
+      "producto": "Monitor 144Hz",
+      "cantidad": 213,
+      "estado": "Rechazado",
+      "motivo": "Rechazado manualmente por el encargado."
+    },
+    {
+      "id": 4,
+      "producto": "Monitor 144Hz",
+      "cantidad": 2,
+      "estado": "Aceptado",
+      "motivo": "Aprobado por el encargado. Se despacharon 2 unidad(es)."
+    },
+    {
+      "id": 5,
+      "producto": "Teclado Mechanical",
+      "cantidad": 23,
+      "estado": "Aceptado",
+      "motivo": "Aprobado por el encargado. Se despacharon 23 unidad(es)."
+    },
+    {
+      "id": 6,
+      "producto": "Mouse Logitech 2",
+      "cantidad": 60,
+      "estado": "Rechazado",
+      "motivo": "Rechazado manualmente por el encargado."
+    },
+    {
+      "id": 7,
+      "producto": "Teclado Mechanical",
+      "cantidad": 12,
+      "estado": "Aceptado",
+      "motivo": "Aprobado por el encargado. Se despacharon 12 unidad(es)."
+    },
+    {
+      "id": 8,
+      "producto": "Monitor 144Hz",
+      "cantidad": 2,
+      "estado": "Aceptado",
+      "motivo": "Aprobado por el encargado. Se despacharon 2 unidad(es)."
+    },
+    {
+      "id": 9,
+      "producto": "Mouse Logitech 2",
+      "cantidad": 1,
+      "estado": "Aceptado",
+      "motivo": "Aprobado por el encargado. Se despacharon 1 unidad(es)."
+    }
+  ]
+}

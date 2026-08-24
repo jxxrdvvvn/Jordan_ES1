@@ -1,0 +1,19 @@
+# Sistema de Gestión de Inventario y Validación de Despachos (ES1)
+
+Este proyecto es una aplicación web interactiva desarrollada en **Python** y **Django** para la gestión de inventario y validación manual/automática de despachos de mercadería en bodega. Permite registrar entradas de stock, generar solicitudes de salida, evaluar reglas de negocio mediante aprobación manual y filtrar el historial en 3 vistas diferenciadas.
+
+---
+
+## 🚀 Requisitos Previos
+
+* **Python** 3.10 o superior.
+* **Pip** (gestor de paquetes de Python).
+
+---
+
+## 🛠️ Instalación y Configuración
+
+1. **Clonar o posicionarse en el proyecto:**
+   ```bash
+   cd ES1_SepulvedaJordan
+

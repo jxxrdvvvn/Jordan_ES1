@@ -1,0 +1,113 @@
+====================================================================
+ OPENSPEC - SISTEMA INTERACTIVO DE GESTION Y DESPACHOS (ES1)
+====================================================================
+Especificación técnica formal del sistema de gestión e inventario.
+
+--------------------------------------------------------------------
+1. PROJECT METADATA
+--------------------------------------------------------------------
+Project Name    : Panel Interactivo de Inventario y Validación
+Project ID      : ES1-DESPACHO-INTERACTIVO-02
+Author          : Sepúlveda Jordan
+Tech Stack      : Python 3.10+, Django 5.x, Python-Decouple
+Persist Type    : Flat File JSON (Sin ORM / Sin Base de Datos SQL)
+
+--------------------------------------------------------------------
+2. SYSTEM ARCHITECTURE & GOALS
+--------------------------------------------------------------------
+Goal:
+Proveer una interfaz web interactiva con estética futurista que permita
+ingresar stock, solicitar despachos, notificar solicitudes pendientes y
+delegar la decisión final de aprobación/rechazo al encargado, descontando
+el stock en tiempo real y persistiendo todo el estado en 'datos.json'.
+
+Constraints:
+- PROHIBIDO el uso de bases de datos relacionales (SQLite, MySQL, etc.).
+- PROHIBIDO el uso del ORM de Django (models.py en blanco).
+- Todo el estado debe mantenerse centralizado en 'datos.json'.
+
+--------------------------------------------------------------------
+3. DATA SCHEMA SPECIFICATION (datos.json)
+--------------------------------------------------------------------
+Type: Object
+
+Schema Definition:
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "inventario": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "producto": { "type": "string" },
+          "stock": { "type": "integer" }
+        },
+        "required": ["producto", "stock"]
+      }
+    },
+    "solicitudes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "producto": { "type": "string" },
+          "cantidad": { "type": "integer" },
+          "estado": { 
+            "type": "string",
+            "enum": ["pendiente", "Aceptado", "Rechazado", "Inválido"] 
+          },
+          "motivo": { "type": "string" }
+        },
+        "required": ["id", "producto", "cantidad", "estado", "motivo"]
+      }
+    }
+  },
+  "required": ["inventario", "solicitudes"]
+}
+
+--------------------------------------------------------------------
+4. COMPONENT SPECIFICATION: WEB VIEWS (core/views.py)
+--------------------------------------------------------------------
+Component ID : COMP-VIEW-01
+Routes       : 
+  - GET/POST /                          (panel_control)
+  - GET      /responder/<id>/<accion>/  (responder_solicitud)
+
+Logic Flow (panel_control):
+1. Cargar 'datos.json'. Si no existe, inicializar dict con listas vacías.
+2. IF POST "ingresar_stock":
+      Buscar producto en inventario. Si existe, sumar cantidad; si no, agregar nuevo.
+      Guardar JSON y redirigir a /?tab=general.
+3. IF POST "solicitar_salida":
+      Generar nuevo ID autoincremental.
+      Agregar registro a solicitudes con estado="pendiente".
+      Guardar JSON y redirigir a /?tab=general.
+4. Renderizar 'resumen.html' filtrando solicitudes por la pestaña activa (?tab=).
+
+Logic Flow (responder_solicitud):
+1. Buscar solicitud por ID con estado "pendiente".
+2. Consultar el stock actual del producto en el arreglo inventario.
+3. IF accion == "aceptar":
+      - IF cantidad > 50: estado="Rechazado", motivo="Excede 50 unidades"
+      - ELSE IF cantidad > stock: estado="Rechazado", motivo="Stock insuficiente"
+      - ELSE: estado="Aceptado", restar cantidad al inventario.
+4. IF accion == "rechazar":
+      - estado="Rechazado", motivo="Rechazado manualmente por el encargado"
+5. Escribir cambios en 'datos.json' y redirigir a /?tab=general.
+
+--------------------------------------------------------------------
+5. COMPONENT SPECIFICATION: UI TEMPLATE (core/templates/resumen.html)
+--------------------------------------------------------------------
+Component ID : COMP-UI-01
+Design Style : Cyberpunk / Dark Mode (Fondo #0b0f19, acentos neón #00f2fe)
+
+Sections:
+1. Forms Grid: Formulario de entrada (+ Ingreso Stock) y salida (- Solicitud Despacho).
+2. Nav Tabs: Menús con pestañas (General, Stock Aceptado, Stock Rechazado).
+3. Dynamic Tables:
+   - Pestaña General: Muestra tabla de inventario y tabla de notificaciones pendientes con botones interactivos (✓ Aceptar Salida / ✕ Rechazar).
+   - Pestaña Aceptados/Rechazados: Historial detallado con badges de color.
+====================================================================

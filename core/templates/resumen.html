@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Stock & Despachos | System Matrix</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Consolas, monospace; background: #0b0f19; color: #c5d1ec; padding: 30px; }
+        .container { max-width: 1100px; margin: 0 auto; background: #111827; border: 1px solid #1f293d; border-radius: 12px; padding: 25px; box-shadow: 0 0 25px rgba(0,242,254,0.08); }
+        
+        .forms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stock-form { background: #161e2e; padding: 15px; border-radius: 8px; border: 1px solid #1f293d; display: flex; flex-direction: column; gap: 10px; }
+        .stock-form-row { display: flex; gap: 10px; }
+        .stock-form input, .stock-form select { background: #0b0f19; border: 1px solid #374151; color: white; padding: 8px 12px; border-radius: 4px; flex: 1; }
+        
+        .btn-ingresar { background: #00f2fe; color: #0b0f19; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-salida { background: #f59e0b; color: #0b0f19; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        .nav-tabs { display: flex; gap: 10px; border-bottom: 2px solid #1f293d; margin-bottom: 20px; }
+        .nav-tab { padding: 12px 20px; color: #6b7280; text-decoration: none; font-weight: bold; border-radius: 6px 6px 0 0; }
+        .nav-tab.active { background: #1a2332; color: #00f2fe; border-bottom: 2px solid #00f2fe; }
+        
+        .badge-count { background: #ef4444; color: white; border-radius: 50%; padding: 2px 7px; font-size: 0.75rem; margin-left: 5px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #1a2332; color: #00f2fe; text-align: left; padding: 12px; font-size: 0.85rem; }
+        td { padding: 12px; border-bottom: 1px solid #1f293d; }
+        
+        .btn-action { text-decoration: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
+        .btn-accept { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+        .btn-reject { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+        
+        .Aceptado { color: #10b981; }
+        .Rechazado { color: #ef4444; }
+        .Inválido { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="margin-bottom: 20px;">Panel de Gestión de Inventario & Despachos</h2>
+
+        <!-- Paneles Superiores para Entrada y Salida -->
+        <div class="forms-grid">
+            <!-- Formulario 1: Entrada de Stock -->
+            <form class="stock-form" method="POST">
+                {% csrf_token %}
+                <strong style="color: #00f2fe;">+ Ingreso de Stock (Entrada)</strong>
+                <div class="stock-form-row">
+                    <input type="text" name="producto" placeholder="Nombre Producto" required>
+                    <input type="number" name="cantidad" placeholder="Cantidad" min="1" required>
+                </div>
+                <button type="submit" name="ingresar_stock" class="btn-ingresar">Cargar Stock</button>
+            </form>
+
+            <!-- Formulario 2: Solicitud de Salida de Stock -->
+            <form class="stock-form" method="POST">
+                {% csrf_token %}
+                <strong style="color: #f59e0b;">- Solicitar Salida de Stock (Despacho)</strong>
+                <div class="stock-form-row">
+                    {% if inventario %}
+                        <select name="producto_salida" required>
+                            <option value="" disabled selected>Seleccionar Producto...</option>
+                            {% for item in inventario %}
+                                <option value="{{ item.producto }}">{{ item.producto }} (Stock: {{ item.stock }})</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <input type="text" name="producto_salida" placeholder="Nombre Producto" required>
+                    {% endif %}
+                    <input type="number" name="cantidad_salida" placeholder="Cantidad" min="1" required>
+                </div>
+                <button type="submit" name="solicitar_salida" class="btn-salida">Enviar Solicitud</button>
+            </form>
+        </div>
+
+        <!-- Menús Principales -->
+        <div class="nav-tabs">
+            <a href="/?tab=general" class="nav-tab {% if tab == 'general' %}active{% endif %}">
+                Stock General & Solicitudes Pendientes
+                {% if total_pendientes > 0 %}<span class="badge-count">{{ total_pendientes }}</span>{% endif %}
+            </a>
+            <a href="/?tab=aceptados" class="nav-tab {% if tab == 'aceptados' %}active{% endif %}">Stock Aceptado</a>
+            <a href="/?tab=rechazados" class="nav-tab {% if tab == 'rechazados' %}active{% endif %}">Stock Rechazado</a>
+        </div>
+
+        {% if tab == 'general' %}
+            <h3 style="color: #ffffff; margin-bottom: 10px;">📦 Inventario Actual en Bodega</h3>
+            <table>
+                <thead><tr><th>Producto</th><th>Stock Disponible</th></tr></thead>
+                <tbody>
+                    {% for item in inventario %}
+                    <tr>
+                        <td style="color: white;">{{ item.producto }}</td>
+                        <td><strong style="color: #00f2fe;">{{ item.stock }} unidades</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" style="color: #6b7280;">No hay stock registrado en bodega.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3 style="color: #ffffff; margin-top: 30px; margin-bottom: 10px;">🔔 Solicitudes Pendientes por Aprobar/Rechazar</h3>
+            <table>
+                <thead><tr><th>ID</th><th>Producto</th><th>Solicitado</th><th>Acción Requerida</th></tr></thead>
+                <tbody>
+                    {% for s in solicitudes %}
+                    <tr>
+                        <td>#{{ s.id }}</td>
+                        <td style="color: white;">{{ s.producto }}</td>
+                        <td>{{ s.cantidad }} unid.</td>
+                        <td>
+                            <a href="/responder/{{ s.id }}/aceptar/" class="btn-action btn-accept">✓ Aceptar Salida</a>
+                            <a href="/responder/{{ s.id }}/rechazar/" class="btn-action btn-reject">✕ Rechazar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="color: #6b7280;">No hay solicitudes pendientes de aprobación.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+            <!-- Vista para Menú Aceptados / Rechazados -->
+            <h3 style="color: #ffffff; margin-bottom: 10px;">Historial: {{ tab|title }}</h3>
+            <table>
+                <thead><tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Estado</th><th>Motivo / Diagnóstico</th></tr></thead>
+                <tbody>
+                    {% for s in solicitudes %}
+                    <tr>
+                        <td>#{{ s.id }}</td>
+                        <td style="color: white;">{{ s.producto }}</td>
+                        <td>{{ s.cantidad }}</td>
+                        <td class="{{ s.estado }}"><strong>{{ s.estado }}</strong></td>
+                        <td style="color: #9ca3af;">{{ s.motivo }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="color: #6b7280;">No existen registros en esta sección.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</body>
+</html>
